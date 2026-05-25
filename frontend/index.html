@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Support Ticket Manager — Test Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --border: #e2e5ea;
+    --muted: #6b7280;
+    --text: #111827;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --ok: #16a34a;
+    --warn: #d97706;
+    --err: #dc2626;
+    --code-bg: #0b1020;
+    --code-fg: #e5e7eb;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  header {
+    background: #111827;
+    color: #f9fafb;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  header .base {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #cbd5e1;
+  }
+  header input.base-input {
+    background: #1f2937; color: #f9fafb; border: 1px solid #374151;
+    border-radius: 4px; padding: 4px 8px; font-size: 12px; width: 220px;
+  }
+  header .status { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .dot.ok { background: var(--ok); }
+  .dot.err { background: var(--err); }
+
+  main {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 16px;
+    padding: 16px;
+    align-items: start;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+  .panel > header {
+    background: transparent; color: var(--text);
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .panel > .body { padding: 14px; }
+
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 14px; background: #fafbfc; border-radius: 8px 8px 0 0; }
+  .tab {
+    padding: 10px 14px; cursor: pointer; border: none; background: transparent;
+    color: var(--muted); font-weight: 500; font-size: 13px;
+    border-bottom: 2px solid transparent;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  input, select, textarea {
+    width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 13px; font-family: inherit; background: #fff;
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+
+  button {
+    padding: 6px 12px; border: 1px solid var(--accent); background: var(--accent);
+    color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;
+  }
+  button.secondary { background: #fff; color: var(--accent); }
+  button.danger { background: var(--err); border-color: var(--err); }
+  button.ghost { background: transparent; border-color: var(--border); color: var(--text); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row > * { flex: 0 0 auto; }
+  .spacer { flex: 1 1 auto; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { background: #fafbfc; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  tr.clickable { cursor: pointer; }
+  tr.clickable:hover { background: #f8fafc; }
+  tr.selected { background: var(--accent-soft); }
+
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px;
+    font-weight: 600; background: #e5e7eb; color: #374151;
+  }
+  .badge.OPEN { background: #dbeafe; color: #1e40af; }
+  .badge.IN_PROGRESS { background: #fef3c7; color: #92400e; }
+  .badge.RESOLVED { background: #dcfce7; color: #166534; }
+  .badge.CLOSED { background: #e5e7eb; color: #374151; }
+  .badge.URGENT { background: #fee2e2; color: #991b1b; }
+  .badge.HIGH { background: #ffedd5; color: #9a3412; }
+  .badge.MEDIUM { background: #e0e7ff; color: #3730a3; }
+  .badge.LOW { background: #f3f4f6; color: #4b5563; }
+
+  pre.code {
+    background: var(--code-bg); color: var(--code-fg);
+    padding: 10px 12px; border-radius: 6px; font-size: 12px;
+    overflow: auto; max-height: 320px; margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  .log-entry { border-bottom: 1px solid var(--border); padding: 10px 14px; font-size: 12px; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .method { font-weight: 700; min-width: 50px; }
+  .method.GET { color: #2563eb; }
+  .method.POST { color: #16a34a; }
+  .method.PATCH { color: #d97706; }
+  .method.DELETE { color: #dc2626; }
+  .status-pill { padding: 1px 6px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .status-pill.s2 { background: #dcfce7; color: #166534; }
+  .status-pill.s3 { background: #fef3c7; color: #92400e; }
+  .status-pill.s4, .status-pill.s5 { background: #fee2e2; color: #991b1b; }
+  .log-path { color: var(--muted); word-break: break-all; }
+  .log-time { margin-left: auto; color: var(--muted); }
+  .log-body { background: #f8fafc; border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; max-height: 140px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+
+  details { margin-top: 6px; }
+  details summary { cursor: pointer; color: var(--accent); font-size: 12px; }
+
+  .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 24px; }
+  .small { font-size: 12px; color: var(--muted); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+  .nowrap { white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Support Ticket Manager · Test Console <span style="font-weight:400; font-size:11px; color:#94a3b8; margin-left:8px;">(AI-generated · testing only)</span></h1>
+  <div class="base">
+    <label for="base-url" style="margin:0;color:#cbd5e1;">API base:</label>
+    <input id="base-url" class="base-input" value="/api/v1" />
+  </div>
+  <div class="status">
+    <span class="dot" id="health-dot"></span>
+    <span id="health-text">unknown</span>
+    <button class="ghost" id="ping" style="background:#1f2937;color:#f9fafb;border-color:#374151;">Ping</button>
+  </div>
+</header>
+
+<main>
+  <div>
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="tickets">Tickets</button>
+        <button class="tab" data-tab="agents">Agents</button>
+      </div>
+
+      <!-- Tickets tab -->
+      <div class="body" id="tab-tickets">
+        <h3 style="margin-top:0;">Create ticket</h3>
+        <form id="create-ticket-form">
+          <div class="grid-2">
+            <div>
+              <label>Customer name</label>
+              <input name="customer_name" required value="Alice Customer" />
+            </div>
+            <div>
+              <label>Customer email</label>
+              <input name="customer_email" type="email" required value="alice@example.com" />
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <label>Subject</label>
+            <input name="subject" required value="Cannot log in" />
+          </div>
+          <div style="margin-top:8px;">
+            <label>Description</label>
+            <textarea name="description" required>I get an error when entering my password. Please help, this is urgent.</textarea>
+          </div>
+          <div class="grid-2" style="margin-top:8px;">
+            <div>
+              <label>Priority</label>
+              <select name="priority">
+                <option>LOW</option><option selected>MEDIUM</option><option>HIGH</option><option>URGENT</option>
+              </select>
+            </div>
+            <div>
+              <label>Category</label>
+              <select name="category">
+                <option>TECHNICAL</option><option>BILLING</option><option selected>ACCOUNT</option><option>GENERAL</option><option>OTHER</option>
+              </select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button type="submit">Create ticket</button>
+            <span class="small">Worker should process within ~20s. Click the ticket below to see results.</span>
+          </div>
+        </form>
+
+        <hr />
+
+        <h3>List tickets</h3>
+        <div class="row" style="margin-bottom:8px;">
+          <div><label>Status</label><select id="f-status"><option value="">any</option><option>OPEN</option><option>IN_PROGRESS</option><option>RESOLVED</option><option>CLOSED</option></select></div>
+          <div><label>Priority</label><select id="f-priority"><option value="">any</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>URGENT</option></select></div>
+          <div><label>Category</label><select id="f-category"><option value="">any</option><option>TECHNICAL</option><option>BILLING</option><option>ACCOUNT</option><option>GENERAL</option><option>OTHER</option></select></div>
+          <div><label>Page</label><input id="f-page" type="number" min="1" value="1" style="width:70px;" /></div>
+          <div><label>Page size</label><input id="f-page-size" type="number" min="1" max="100" value="20" style="width:80px;" /></div>
+          <div style="align-self:flex-end;"><button id="refresh-tickets" class="secondary">Refresh</button></div>
+        </div>
+        <div id="tickets-table-wrap"></div>
+
+        <div id="ticket-detail-wrap"></div>
+      </div>
+
+      <!-- Agents tab -->
+      <div class="body" id="tab-agents" style="display:none;">
+        <h3 style="margin-top:0;">Create agent</h3>
+        <form id="create-agent-form">
+          <div class="grid-2">
+            <div>
+              <label>Name</label>
+              <input name="name" required value="Bob Agent" />
+            </div>
+            <div>
+              <label>Email</label>
+              <input name="email" type="email" required value="bob@example.com" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button type="submit">Create agent</button>
+          </div>
+        </form>
+
+        <hr />
+
+        <h3>List agents</h3>
+        <div class="row" style="margin-bottom:8px;">
+          <div>
+            <label>Active</label>
+            <select id="af-active"><option value="">any</option><option value="true">true</option><option value="false">false</option></select>
+          </div>
+          <div><label>Page</label><input id="af-page" type="number" min="1" value="1" style="width:70px;" /></div>
+          <div><label>Page size</label><input id="af-page-size" type="number" min="1" max="100" value="20" style="width:80px;" /></div>
+          <div style="align-self:flex-end;"><button id="refresh-agents" class="secondary">Refresh</button></div>
+        </div>
+        <div id="agents-table-wrap"></div>
+
+        <div id="agent-detail-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: activity log -->
+  <div class="panel">
+    <header>
+      Activity
+      <button class="ghost" id="clear-log" style="float:right; padding:2px 8px; font-size:11px;">Clear</button>
+    </header>
+    <div id="log" style="max-height: 80vh; overflow:auto;"></div>
+  </div>
+</main>
+
+<script>
+// ----- API helper -----
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+const state = {
+  selectedTicketId: null,
+  selectedAgentId: null,
+  agentsCache: [],
+};
+
+function getBase() {
+  return $('#base-url').value.replace(/\/$/, '');
+}
+
+async function api(method, path, body=null) {
+  const url = getBase() + path;
+  const opts = { method, headers: {} };
+  if (body !== null) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const started = performance.now();
+  let res, text, json;
+  try {
+    res = await fetch(url, opts);
+    text = await res.text();
+    try { json = text ? JSON.parse(text) : null; } catch { json = null; }
+  } catch (err) {
+    log({ method, path, status: 0, body, response: { error: String(err) }, ms: Math.round(performance.now() - started) });
+    throw err;
+  }
+  const ms = Math.round(performance.now() - started);
+  log({ method, path, status: res.status, body, response: json ?? text, ms });
+  if (!res.ok) {
+    const errPayload = json ?? { code: 'error', message: text || res.statusText };
+    const e = new Error(errPayload.message || res.statusText);
+    e.status = res.status; e.payload = errPayload;
+    throw e;
+  }
+  return json;
+}
+
+// ----- Activity log -----
+function log(entry) {
+  const wrap = $('#log');
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  const statusClass = entry.status === 0 ? 's5' : 's' + Math.floor(entry.status / 100);
+  el.innerHTML = `
+    <div class="log-head">
+      <span class="method ${entry.method}">${entry.method}</span>
+      <span class="log-path">${escapeHtml(entry.path)}</span>
+      <span class="status-pill ${statusClass}">${entry.status || 'ERR'}</span>
+      <span class="log-time">${entry.ms}ms</span>
+    </div>
+    ${entry.body ? `<details><summary>request</summary><pre class="log-body">${escapeHtml(JSON.stringify(entry.body, null, 2))}</pre></details>` : ''}
+    <details open><summary>response</summary><pre class="log-body">${escapeHtml(formatResponse(entry.response))}</pre></details>
+  `;
+  wrap.prepend(el);
+}
+function formatResponse(v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'string') return v;
+  try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+$('#clear-log').addEventListener('click', () => { $('#log').innerHTML = ''; });
+
+// ----- Health ping -----
+async function ping() {
+  $('#health-dot').className = 'dot';
+  $('#health-text').textContent = 'checking…';
+  try {
+    await api('GET', '/health');
+    $('#health-dot').className = 'dot ok';
+    $('#health-text').textContent = 'healthy';
+  } catch (e) {
+    $('#health-dot').className = 'dot err';
+    $('#health-text').textContent = 'down';
+  }
+}
+$('#ping').addEventListener('click', ping);
+
+// ----- Tabs -----
+$$('.tab').forEach(t => t.addEventListener('click', () => {
+  $$('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  const which = t.dataset.tab;
+  $('#tab-tickets').style.display = which === 'tickets' ? 'block' : 'none';
+  $('#tab-agents').style.display = which === 'agents' ? 'block' : 'none';
+  if (which === 'agents') loadAgents();
+}));
+
+// ----- Tickets: create -----
+$('#create-ticket-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = Object.fromEntries(fd.entries());
+  try {
+    const t = await api('POST', '/tickets', payload);
+    state.selectedTicketId = t.id;
+    await loadTickets();
+    await showTicketDetail(t.id);
+  } catch (err) { /* logged */ }
+});
+
+// ----- Tickets: list -----
+async function loadTickets() {
+  const params = new URLSearchParams();
+  if ($('#f-status').value) params.set('status', $('#f-status').value);
+  if ($('#f-priority').value) params.set('priority', $('#f-priority').value);
+  if ($('#f-category').value) params.set('category', $('#f-category').value);
+  params.set('page', $('#f-page').value);
+  params.set('page_size', $('#f-page-size').value);
+
+  try {
+    const page = await api('GET', '/tickets?' + params.toString());
+    renderTicketsTable(page);
+  } catch (err) { renderError('#tickets-table-wrap', err); }
+}
+$('#refresh-tickets').addEventListener('click', loadTickets);
+
+function renderTicketsTable(page) {
+  const wrap = $('#tickets-table-wrap');
+  if (!page.items.length) {
+    wrap.innerHTML = `<div class="empty">No tickets. ${page.total} total.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="small" style="margin-bottom:6px;">${page.total} total · page ${page.page}/${Math.max(1, Math.ceil(page.total / page.page_size))}</div>
+    <table>
+      <thead><tr><th>ID</th><th>Subject</th><th>Status</th><th>Priority</th><th>Category</th><th>Agent</th><th>Created</th></tr></thead>
+      <tbody>
+        ${page.items.map(t => `
+          <tr class="clickable ${t.id === state.selectedTicketId ? 'selected' : ''}" data-id="${t.id}">
+            <td class="mono" title="${t.id}">${t.id.slice(0,8)}</td>
+            <td>${escapeHtml(t.subject)}</td>
+            <td><span class="badge ${t.status}">${t.status}</span>${t.processing_result?.is_spam ? ' <span class="badge" style="background:#fee2e2;color:#991b1b;">SPAM</span>' : ''}</td>
+            <td><span class="badge ${t.priority}">${t.priority}</span></td>
+            <td>${t.category}</td>
+            <td class="mono">${t.agent_id ? t.agent_id.slice(0,8) : '—'}</td>
+            <td class="small nowrap">${new Date(t.created_at).toLocaleString()}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  $$('tr.clickable', wrap).forEach(tr => tr.addEventListener('click', () => showTicketDetail(tr.dataset.id)));
+}
+
+// ----- Tickets: detail + status + assignment -----
+async function showTicketDetail(id) {
+  state.selectedTicketId = id;
+  $$('#tickets-table-wrap tr.clickable').forEach(tr => tr.classList.toggle('selected', tr.dataset.id === id));
+  try {
+    const t = await api('GET', `/tickets/${id}`);
+    await ensureAgents();
+    renderTicketDetail(t);
+  } catch (err) { renderError('#ticket-detail-wrap', err); }
+}
+
+function renderTicketDetail(t) {
+  const allowed = {
+    OPEN:        ['IN_PROGRESS', 'CLOSED'],
+    IN_PROGRESS: ['OPEN', 'RESOLVED', 'CLOSED'],
+    RESOLVED:    ['IN_PROGRESS', 'CLOSED'],
+    CLOSED:      [],
+  }[t.status] || [];
+
+  const agentOpts = ['<option value="">— unassigned —</option>']
+    .concat(state.agentsCache.map(a => `<option value="${a.id}" ${a.id === t.agent_id ? 'selected' : ''}>${escapeHtml(a.name)} (${a.email})</option>`))
+    .join('');
+
+  const pr = t.processing_result;
+  const prHtml = pr ? `
+    <h4>Processing result <span class="badge ${pr.processing_status}">${pr.processing_status}</span></h4>
+    <table>
+      <tr><th>Summary</th><td>${escapeHtml(pr.auto_summary || '—')}</td></tr>
+      <tr><th>Suggested priority</th><td>${pr.suggested_priority || '—'}</td></tr>
+      <tr><th>Suggested department</th><td>${pr.suggested_department || '—'}</td></tr>
+      <tr><th>Spam score</th><td>${pr.spam_score ?? '—'} ${pr.is_spam ? '(spam)' : ''}</td></tr>
+      <tr><th>Processed at</th><td class="small">${new Date(pr.processed_at).toLocaleString()}</td></tr>
+      ${pr.error_message ? `<tr><th>Error</th><td><pre class="code">${escapeHtml(pr.error_message)}</pre></td></tr>` : ''}
+    </table>
+  ` : `<p class="small">No processing result yet. Worker hasn't picked this up — try refreshing in a few seconds.</p>`;
+
+  $('#ticket-detail-wrap').innerHTML = `
+    <hr />
+    <div class="row">
+      <h3 style="margin:0;">Ticket detail</h3>
+      <span class="mono small">${t.id}</span>
+      <div class="spacer"></div>
+      <button class="ghost" id="reload-ticket">Reload</button>
+    </div>
+    <div class="grid-2" style="margin-top:10px;">
+      <div>
+        <h4>Update status</h4>
+        <div class="row">
+          <span>Current: <span class="badge ${t.status}">${t.status}</span></span>
+        </div>
+        ${allowed.length ? `
+          <div class="row" style="margin-top:6px;">
+            <select id="new-status">${allowed.map(s => `<option>${s}</option>`).join('')}</select>
+            <input id="status-actor" placeholder="actor_id (optional)" class="mono" style="width:280px;" />
+            <button id="apply-status">Apply</button>
+          </div>
+          <div class="small" style="margin-top:6px;">Allowed: ${allowed.join(', ')}</div>
+        ` : `<div class="small">Terminal state — no further transitions allowed.</div>`}
+      </div>
+      <div>
+        <h4>Assignment</h4>
+        <div class="row">
+          <select id="new-agent">${agentOpts}</select>
+        </div>
+        <div class="row" style="margin-top:6px;">
+          <input id="assign-actor" placeholder="actor_id (optional)" class="mono" style="flex:1;" />
+          <button id="apply-assign">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+    ${prHtml}
+
+    <hr />
+    <details>
+      <summary>Raw ticket JSON</summary>
+      <pre class="code">${escapeHtml(JSON.stringify(t, null, 2))}</pre>
+    </details>
+  `;
+
+  $('#reload-ticket').addEventListener('click', () => showTicketDetail(t.id));
+  if (allowed.length) {
+    $('#apply-status').addEventListener('click', async () => {
+      const payload = { status: $('#new-status').value };
+      const actor = $('#status-actor').value.trim();
+      if (actor) payload.actor_id = actor;
+      try {
+        await api('PATCH', `/tickets/${t.id}/status`, payload);
+        await loadTickets();
+        await showTicketDetail(t.id);
+      } catch (err) { /* logged */ }
+    });
+  }
+  $('#apply-assign').addEventListener('click', async () => {
+    const v = $('#new-agent').value;
+    const payload = { agent_id: v || null };
+    const actor = $('#assign-actor').value.trim();
+    if (actor) payload.actor_id = actor;
+    try {
+      await api('PATCH', `/tickets/${t.id}/assignment`, payload);
+      await loadTickets();
+      await showTicketDetail(t.id);
+    } catch (err) { /* logged */ }
+  });
+}
+
+// ----- Agents -----
+$('#create-agent-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = Object.fromEntries(fd.entries());
+  try {
+    await api('POST', '/agents', payload);
+    await loadAgents();
+  } catch (err) { /* logged */ }
+});
+
+$('#refresh-agents').addEventListener('click', loadAgents);
+
+async function loadAgents() {
+  const params = new URLSearchParams();
+  if ($('#af-active').value) params.set('is_active', $('#af-active').value);
+  params.set('page', $('#af-page').value);
+  params.set('page_size', $('#af-page-size').value);
+  try {
+    const page = await api('GET', '/agents?' + params.toString());
+    state.agentsCache = page.items;
+    renderAgentsTable(page);
+  } catch (err) { renderError('#agents-table-wrap', err); }
+}
+
+async function ensureAgents() {
+  if (state.agentsCache.length === 0) {
+    try {
+      const page = await api('GET', '/agents?page=1&page_size=100');
+      state.agentsCache = page.items;
+    } catch {}
+  }
+}
+
+function renderAgentsTable(page) {
+  const wrap = $('#agents-table-wrap');
+  if (!page.items.length) {
+    wrap.innerHTML = `<div class="empty">No agents.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="small" style="margin-bottom:6px;">${page.total} total</div>
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Active</th><th>Created</th></tr></thead>
+      <tbody>
+        ${page.items.map(a => `
+          <tr class="clickable ${a.id === state.selectedAgentId ? 'selected' : ''}" data-id="${a.id}">
+            <td>${escapeHtml(a.name)}</td>
+            <td class="mono">${escapeHtml(a.email)}</td>
+            <td>${a.is_active ? '<span class="badge" style="background:#dcfce7;color:#166534;">active</span>' : '<span class="badge">inactive</span>'}</td>
+            <td class="small nowrap">${new Date(a.created_at).toLocaleString()}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  $$('tr.clickable', wrap).forEach(tr => tr.addEventListener('click', () => showAgentDetail(tr.dataset.id)));
+}
+
+async function showAgentDetail(id) {
+  state.selectedAgentId = id;
+  $$('#agents-table-wrap tr.clickable').forEach(tr => tr.classList.toggle('selected', tr.dataset.id === id));
+  try {
+    const a = await api('GET', `/agents/${id}`);
+    $('#agent-detail-wrap').innerHTML = `
+      <hr />
+      <div class="row"><h3 style="margin:0;">Agent detail</h3><span class="mono small">${a.id}</span></div>
+      <div class="grid-2" style="margin-top:10px;">
+        <div>
+          <label>Name</label>
+          <input id="agent-name" value="${escapeHtml(a.name)}" />
+        </div>
+        <div>
+          <label>Active</label>
+          <select id="agent-active"><option value="true" ${a.is_active ? 'selected' : ''}>true</option><option value="false" ${!a.is_active ? 'selected' : ''}>false</option></select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button id="save-agent">Save</button>
+        <button class="danger" id="delete-agent">Deactivate (soft delete)</button>
+      </div>
+      <details style="margin-top:10px;"><summary>Raw JSON</summary><pre class="code">${escapeHtml(JSON.stringify(a, null, 2))}</pre></details>
+    `;
+    $('#save-agent').addEventListener('click', async () => {
+      const payload = { name: $('#agent-name').value, is_active: $('#agent-active').value === 'true' };
+      try { await api('PATCH', `/agents/${id}`, payload); await loadAgents(); await showAgentDetail(id); } catch {}
+    });
+    $('#delete-agent').addEventListener('click', async () => {
+      try { await api('DELETE', `/agents/${id}`); await loadAgents(); await showAgentDetail(id); } catch {}
+    });
+  } catch (err) { renderError('#agent-detail-wrap', err); }
+}
+
+function renderError(sel, err) {
+  $(sel).innerHTML = `<div class="empty" style="color:var(--err);">${escapeHtml(err.message || String(err))}</div>`;
+}
+
+// ----- init -----
+ping();
+loadTickets();
+</script>
+</body>
+</html>
