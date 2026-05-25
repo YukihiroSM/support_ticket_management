@@ -47,7 +47,7 @@ Allowed status transitions: `OPEN ↔ IN_PROGRESS → RESOLVED → CLOSED` (clos
 
 ## DB schema
 
-![DB schema](DB_Schema.png)
+![DB schema](DB_Schema.png?v=2)
 
 ## Layout
 
