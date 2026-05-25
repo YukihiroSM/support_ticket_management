@@ -93,6 +93,6 @@ Why it looks the way it does:
 | `SQS_QUEUE_URL` | LocalStack URL | main processing queue |
 | `WORKER_POLL_WAIT_SECONDS` | `20` | SQS long-poll window |
 | `WORKER_MAX_MESSAGES` | `10` | max messages per `receive_message` |
-| `LOCALSTACK_AUTH_TOKEN` | _(required)_ | LocalStack Pro token; consumed by the `localstack` compose service, not the app. Free token: https://app.localstack.cloud/getting-started |
+| `LOCALSTACK_AUTH_TOKEN` | _(required)_ | LocalStack token; consumed by the `localstack` compose service, not the app. Free token: https://app.localstack.cloud/getting-started |
 
 All vars are read in `app/config.py` via `pydantic-settings`. Defaults come from `.env`.
