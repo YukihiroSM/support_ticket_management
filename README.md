@@ -45,6 +45,10 @@ All under `/api/v1`.
 
 Allowed status transitions: `OPEN ↔ IN_PROGRESS → RESOLVED → CLOSED` (closed is terminal). Defined in `app/enums.py`.
 
+## DB schema
+
+![DB schema](DB_Schema.png)
+
 ## Layout
 
 ```
